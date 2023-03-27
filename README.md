@@ -1,5 +1,6 @@
 # Project Ideas App
-Daml templates designed for a platform for proposing project ideas to get rejected/approved.
+- A sample app designed for the Daml Fundamentals Certificate Path
+- Daml templates designed for a platform for proposing project ideas to get rejected/approved.
 
 ### I. Overview 
 This project was created by using the `empty-skeleton` template. The project adopts and exemplifies the `proposal-accept` design pattern. A signatory can create a ProjectIdea contract. Then they can exercise the Propose choice as a controller to get the project proposal either approved or rejected by their manager. If the manager, a controller, exercises Reject choice on the proposed contract, the employee can exercise Revise choice on it to re-propose the project with updated details. Upon manager exercising Accept choice, a Project contract is created.
