@@ -13,9 +13,6 @@ template ProjectIdea
     where 
         signatory employee
         observer employee, colleague, manager
-        -- "DAML contracts are private; you have to explicitly declare the parties that can see them. If a party needs to be able to exercise a choice on a contract, the signatory first needs to make them an observer."
-        -- otherwise will run into an error: "Attempt to fetch or exercise a contract not visible to the committer"
-        -- https://discuss.daml.com/t/error-attempt-to-fetch-or-exercise-a-contract-not-visible-to-the-committer/1304/1
 
         -- employee can propose a project idea 
         choice Propose : ProjectIdeaId -- "ProjectIdeaId" replaces "ContractId ProjectIdea"
