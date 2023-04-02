@@ -1,19 +1,27 @@
 # Daml Fundamentals Certificate Sample App
 
-✨ Welcome to the Daml Fundamentals Certificate Sample App! ✨
+✨ Welcome to the Daml Fundamentals Certification Sample App! ✨
 
-As part of the certificate path program, you will be required to complete a backend-only capstone project that demonstrates your understanding of the material covered in the course. You have the freedom to choose the topic of your project as long as it fulfills the criteria specified in the rubric.
+As part of the certification process, you will be required to complete a backend-only capstone project that demonstrates your understanding of the material covered throughout the Daml Fundamentals Certification Path. You have the freedom to choose the topic of your project as long as it fulfills the criteria specified below.
 
-The rubric specifies that the project must include the following components that are fully operational:
+The project must include the following components that are fully operational:
 
 + A signatory with the authority to create and archive contracts
 + A controller with the authority to exercise choices on contracts
 + An observer with the authority to view contracts
 + Test scripts that verify the functionalities of the above mentioned parties
 
-Bonus points will be awarded if you implement the bonus features specified in the rubric in addition to the core features. For more information, please refer to the criteria listed in the rubric.
+Bonus points will be awarded if you implement the following features:
 
-![rubric](rubric.png)
++ Use the propose / accept design pattern
++ Use the try / catch block for error handling
+
+We will score all required and bonus features (6 in total) by the following:
+
++ The feature is free of bugs
++ Only authorized users have access to the feature
++ The feature can be tested appropriately
++ TX is not unexpectedly aborted
 
 To help you prepare for your capstone project, we provide this sample app as a guide for the kind of app you should aim to build. The sample app has been designed to showcase the key concepts and skills that you will need to apply in your own project.
 
