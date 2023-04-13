@@ -21,7 +21,7 @@ We will score all required and bonus features (6 in total) by the following:
 + The feature is free of bugs
 + Only authorized users have access to the feature
 + The feature can be tested appropriately
-+ TX is not unexpectedly aborted
++ TX is not unexpectedly aborted 
 
 To help you prepare for your capstone project, we provide this sample app as a guide for the kind of app you should aim to build. The sample app has been designed to showcase the key concepts and skills that you will need to apply in your own project.
 
@@ -29,7 +29,7 @@ We recommend that you examine this app closely, paying attention to the code str
 
 ---
 
-# Project Ideas App
+# Project Proposal App
 Daml templates designed for a platform for proposing project ideas to get rejected/approved.
 
 ### I. Overview 
