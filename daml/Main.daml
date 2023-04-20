@@ -12,7 +12,7 @@ template ProjectIdea
         note : Text
     where 
         signatory employee
-        observer employee, colleague, manager
+        observer colleague, manager
 
         -- employee can propose a project idea 
         choice Propose : ProjectIdeaId -- "ProjectIdeaId" replaces "ContractId ProjectIdea"

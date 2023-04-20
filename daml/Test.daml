@@ -13,22 +13,17 @@ setup = do
             employee = bob
             colleague = charlie
             manager = alice
-            project = "Associate certificate rubric - draft no. 1"
+            project = "Daml Fundamentals Certification Capstone Rubric - Draft No. 1"
             note = "Should include both backend AND frontend"
 
     aliceRejects <- submit alice do 
         exerciseCmd bobProjectIdea Reject with
-            feedback = "No way, teaching frontend at this point is too much and unnecessary"
+            feedback = "No way, teaching frontend at this point is too much"
     
     bobRevises <- submit bob do
         exerciseCmd aliceRejects Revise with
-            newProject = "Associate certifivate rubric - draft no.2"
-            newNote = "Agreed, let's focus on the backend and Navigator"
+            newProject = "Daml Fundamentals Certification Capstone Rubric - Draft No.2"
+            newNote = "Agreed, let's focus on the Daml backend and Navigator"
 
     submit alice do
         exerciseCmd bobRevises Accept
-
-
-test : Script ()
-test = script do
-    return ()
