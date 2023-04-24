@@ -2,26 +2,30 @@
 
 ✨ Welcome to the Daml Fundamentals Certification Sample App! ✨
 
-As part of the certification process, you will be required to complete a backend-only capstone project that demonstrates your understanding of the material covered throughout the Daml Fundamentals Certification Path. You have the freedom to choose the topic of your project as long as it fulfills the criteria specified below.
+As part of the certification process, you will be required to complete a backend-only capstone project that demonstrates your understanding of the material covered throughout the Daml Fundamentals Certification Path. You have the freedom to choose the topic of your project as long as it fulfills the criteria specified below. 
 
-The project must include the following components that are fully operational:
+**The project must include the following components that are fully operational:**
 
 + A signatory with the authority to create and archive contracts
 + A controller with the authority to exercise choices on contracts
 + An observer with the authority to view contracts
 + Test scripts that verify the functionalities of the above mentioned parties
 
-Bonus points will be awarded if you implement the following features:
+**Bonus points will be awarded if you implement the following features:**
 
 + Use the propose / accept design pattern
 + Use the try / catch block for error handling
 
-We will score all required and bonus features (6 in total) by the following:
+**We will score all required and bonus features (6 in total) by the following:**
 
 + The feature is free of bugs
 + Only authorized users have access to the feature
 + The feature can be tested appropriately
 + TX is not unexpectedly aborted 
+
+**Additionally, please note the following requirement:**
+
++ You must create a README file that documents your project, including its purpose, functionality, and any important details about how it works. The README file should also include instructions on how to run the project, how to run the tests, and any dependencies required to do so. This documentation will help others understand your project and how to use it, and will also demonstrate your ability to clearly communicate about your work.
 
 To help you prepare for your capstone project, we provide this sample app as a guide for the kind of app you should aim to build. The sample app has been designed to showcase the key concepts and skills that you will need to apply in your own project.
 
