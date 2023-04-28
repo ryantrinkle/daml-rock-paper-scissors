@@ -1,4 +1,4 @@
-# Project Proposal App
+# Rock Paper Scissors App
 Daml templates designed for a platform for playing Rock Paper Scissors with betting.
 
 ### I. Overview
