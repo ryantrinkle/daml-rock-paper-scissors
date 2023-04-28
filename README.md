@@ -1,71 +1,22 @@
-# Daml Fundamentals Certificate Sample App
-
-✨ Welcome to the Daml Fundamentals Certification Sample App! ✨
-
-As part of the certification process, you will be required to complete a backend-only capstone project that demonstrates your understanding of the material covered throughout the Daml Fundamentals Certification Path. You have the freedom to choose the topic of your project as long as it fulfills the criteria specified below. 
-
-**The project must include the following components that are fully operational:**
-
-+ A signatory with the authority to create and archive contracts
-+ A controller with the authority to exercise choices on contracts
-+ An observer with the authority to view contracts
-+ Test scripts that verify the functionalities of the above mentioned parties
-
-**Bonus points will be awarded if you implement the following features:**
-
-+ Use the propose / accept design pattern
-+ Use the try / catch block for error handling
-
-**We will score all required and bonus features (6 in total) by the following:**
-
-+ The feature is free of bugs
-+ Only authorized users have access to the feature
-+ The feature can be tested appropriately
-+ TX is not unexpectedly aborted 
-
-🚨 **IMPORTATN NOTE** 🚨
-+ **The evaluation of your project requires a README that adheres to the format provided in the README of the sample project below.**
-
-+ Your README should document the purpose and functionalities of the project, as well as any important details about how it works. The README file should also include instructions on how to run the project, how to run the tests, and any dependencies required to do so. This documentation will help others understand your project and how to use it, and will also demonstrate your ability to clearly communicate about your work.
-
-To help you prepare for your capstone project, we provide this sample app as a guide for the kind of app you should aim to build. The sample app has been designed to showcase the key concepts and skills that you will need to apply in your own project.
-
-We recommend that you examine this app closely, paying attention to the code structure, functionality, and the test script. We believe that this sample app will be an invaluable resource for you as you work towards your certification. Happy coding!
-
----
-
 # Project Proposal App
-Daml templates designed for a platform for proposing project ideas to get rejected/approved.
+Daml templates designed for a platform for playing Rock Paper Scissors with betting.
 
-### I. Overview 
-This project was created by using the `empty-skeleton` template. The project adopts and exemplifies the `proposal-accept` design pattern. A signatory can create a ProjectIdea contract. Then they can exercise the Propose choice as a controller to get the project proposal either approved or rejected by their manager. If the manager, a controller, exercises Reject choice on the proposed contract, the employee can exercise Revise choice on it to re-propose the project with updated details. Upon manager exercising the Accept choice, a Project contract is created.
+### I. Overview
+Rock Paper Scissors (RPS) is a schoolyard game in which two players 
 
 ### II. Workflow
-1. An employee creates a ProjectIdea contract. Both colleague and manager are invited as obeservers, but manager, as a controller, is authorized to exercise either Reject or Accept choices.
-2. Upon the controller exercising Reject, a new contract is created.
-3. Revise choice can be exercised on the newly generated contract from above.
-4. Accept choice is exercised to finalize the project idea and generate a new Project contract.
 
-[![Demo](./Demo.png)](https://share.vidyard.com/watch/xbDuZMbNUbgfHmPnqzt72N?)
+1. A game is initiated by a party (Player 1) proposing a game to another.  Player 1 includes some money in their proposal, and names the other party (Player 2) with whom they wish to play.  To accept the proposal and start a game, Player 2 must provide a bet equal to Player 1's bet.
+
+2. Once the game is started, it proceeds in two phases.  In Phase 1, each player commits to a move.  The move is stored as a separate contract on-chain, and is not revealed to the other player.  The players may commit in any order, but each player may only commit once.  Phase 1 ends when both players have committed to their moves.
+
+3. In Phase 2, each player reveals their move from Phase 1.  This allows both players to see that the game was conducted fairly.  Players may reveal their moves in any order.  Phase 2 ends when both players have revealed their moves.
+
+4. When Phase 2 ends, the game automatically ends and pays out the winnings appropriately.  If one player has won the game, then both players' bets are paid to that player.  If the game is a draw, each player's bet is returned to that player.
 
 ### III. Challenge(s)
-* `controller ... can` syntax causes warning in Daml 2.0+. The code itself does not cause any issues/errors in 2.5.0 but according to the warning, the syntax will be deprecated in the future versions of Daml. More information [here](https://docs.daml.com/daml/reference/choices.html#daml-ref-controller-can-deprecation).
-* The new controller syntax requires a controller to be an observer first before they can exercise a choice, otherwise it'll throw an error: "Attempt to fetch or exercise a contract not visible to the committer." For more information, check out [this post](https://discuss.daml.com/t/error-attempt-to-fetch-or-exercise-a-contract-not-visible-to-the-committer/1304/1) on the Daml Forum.
-* The project was created by using `empty-skeleton` and the following was removed from `daml.yaml`:
-```
-sandbox-options:
-   - --wall-clock-time
-```
-and replaced with the following:
-
-```
-exposed-modules:
-  - Main
-navigator-options:
- - --feature-user-management=false
-```
-For more info, check out [this post](https://discuss.daml.com/t/sandbox-options-wall-clock-time/5692/16?u=cathy_jung) on Daml Forum and [Daml Doc](https://docs.daml.com/tools/navigator/index.html?&_ga=2.48248804.337210607.1673989679-241632404.1672853064&_gac=1.17025355.1673455980.CjwKCAiA2fmdBhBpEiwA4CcHzfI2w1_D95zAr3_d6QTypOMXGTpUxtS06c55inucNwZvUZn4AebsJxoCZEgQAvD_BwE&_gl=1*elem6v*_ga*MjQxNjMyNDA0LjE2NzI4NTMwNjQ.*_ga_GVK9ZHZSMR*MTY3Mzk5NDQzOS4zMS4xLjE2NzM5OTQ3MDcuMC4wLjA.#logging-in-as-a-party).
-
+* These templates only implement a toy concept of money.  Although the payout logic is correct, additional work would be required to properly escrow and disburse real assets.
+* It is possible for either party to prevent the game from progressing at either Phase 1 or Phase 2, and thus keep both parties' assets locked in the Game contract.  This would function as a denial of service attack, which would initiate an out-of-band ultimatum game, most likely destroying the economics of this game.  A potential solution would be to apply a timeout to the game, such that, after a certain amount of time has passed, either player may exercise a choice that causes them to win if the other player has not made a move.  Note that these situations *must* be treated as a win, not a draw, otherwise an incentive to avoid revealing losing moves remains.
 
 ### IV. Building
 To compile the project

@@ -1,0 +1,8 @@
+module Money where
+
+-- This is a placeholder.  In a real RPS implementation, we would put something here that actually allows the RPS contract to control the money.
+type Money = Decimal
+
+-- This is a placeholder
+payTo : Party -> Money -> Update ()
+payTo party money = debug $ "Paying " <> show money <> " to " <> show party

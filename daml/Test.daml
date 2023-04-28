@@ -1,29 +1,87 @@
 module Test where
-import Main
+
+import RockPaperScissors
 import Daml.Script
 
-setup : Script ProjectId
-setup = do 
-    alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
-    bob <- allocatePartyWithHint "Bob" (PartyIdHint "Bob")
-    charlie <- allocatePartyWithHint "Charlie" (PartyIdHint "Charlie")
+setup : Script ()
+setup = do
+  -- The challenger
+  alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
+  -- The kid who got challenged
+  bob <- allocatePartyWithHint "Bob" (PartyIdHint "Bob")
+  -- All the kids at the school
+  school <- allocatePartyWithHint "School" (PartyIdHint "School")
 
-    bobProjectIdea <- submit bob do
-        createCmd ProjectIdea with
-            employee = bob
-            colleague = charlie
-            manager = alice
-            project = "Daml Fundamentals Certification Capstone Rubric - Draft No. 1"
-            note = "Should include both backend AND frontend"
+  -- Alice challenges Bob to a game of RPS for $5
+  proposal <- submit alice $ createCmd Proposal with
+    player1 = alice
+    player2 = bob
+    player1Bet = 5.00
+    observers = [school]
 
-    aliceRejects <- submit alice do 
-        exerciseCmd bobProjectIdea Reject with
-            feedback = "No way, teaching frontend at this point is too much"
-    
-    bobRevises <- submit bob do
-        exerciseCmd aliceRejects Revise with
-            newProject = "Daml Fundamentals Certification Capstone Rubric - Draft No.2"
-            newNote = "Agreed, let's focus on the Daml backend and Navigator"
+  -- Verify that the whole school can see Alice's challenge
+  Some _ <- queryContractId school proposal
 
-    submit alice do
-        exerciseCmd bobRevises Accept
+  -- Verify that Bob can observe the proposal
+  Some _ <- queryContractId bob proposal
+
+  -- Bob cannot bet the wrong amount
+  submitMustFail bob $ exerciseCmd proposal Accept with
+    player2Bet = 3.00
+
+  -- Bob accepts the challenge
+  game1 <- submit bob $ exerciseCmd proposal Accept with
+    player2Bet = 5.00
+  
+  -- Alice creates her move; Bob cannot see it
+  aliceMove <- submit alice $ createCmd Move with
+    player = alice
+    moveType = Rock
+
+  -- Alice commits to her move; Bob still cannot see it, but Alice can no longer change it
+  game2 <- submit alice $ exerciseCmd game1 Player1Commit with
+    newPlayer1Move = aliceMove
+
+  -- Player 1 cannot change their move after committing
+  submitMustFail alice $ exerciseCmd game2 Player1Commit with
+    newPlayer1Move = aliceMove
+
+  -- Player 1 cannot reveal their move before Player 2 has committed (this is for Player 1's protection against accidental reveals)
+  submitMustFail alice $ exerciseCmd game2 Player1Reveal
+
+  -- Bob creates his move; Alice cannot see it
+  bobMove <- submit bob $ createCmd Move with
+    player = bob
+    moveType = Paper
+
+  -- Bob commits to his move
+  game3 <- submit bob $ exerciseCmd game2 Player2Commit with
+    newPlayer2Move = bobMove
+
+  -- Player 2 cannot change their move after committing
+  submitMustFail alice $ exerciseCmd game3 Player2Commit with
+    newPlayer2Move = bobMove
+
+  -- Verify that Alice and Bob cannot see each other's moves before they are revealed
+  None <- queryContractId alice bobMove
+  None <- queryContractId bob aliceMove
+
+  -- Verify that the school cannot see either of the moves yet
+  None <- queryContractId school aliceMove
+  None <- queryContractId school bobMove
+
+  -- Alice reveals her move; it is now divulged to Bob and the rest of the school
+  Some game4 <- submit alice $ exerciseCmd game3 Player1Reveal
+
+  -- Verify that the whole school can see the game so far
+  Some _ <- queryContractId school game4
+
+  -- Use the "Revealer" to automatically reveal Bob's move
+  -- This is equivalent to `submit bob $ exerciseCmd game4 Player2Reveal` in this case, but demonstrates a way that multiple games coupld potentially be revealed in a single transaction.
+  -- Bob's move is now divulged to Alice and the rest of the school, and the game completes, paying out to Bob
+  revealer <- submit bob $ createCmd Revealer with
+    player = bob
+  submit bob $ exerciseCmd revealer RevealAll with
+    games = [game4]
+
+  pure ()

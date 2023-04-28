@@ -1,0 +1,178 @@
+module RockPaperScissors where
+
+import Money
+
+import DA.Action
+import DA.Exception
+import DA.Foldable (forA_)
+import DA.Optional
+
+-- A proposal from player 1 to player 2 to play Rock Paper Scissors
+template Proposal
+  with
+    player1 : Party
+    player2 : Party
+    observers : [Party]
+    player1Bet : Money
+  where
+    ensure player1Bet >= 0.00
+    signatory player1
+    observer player2, observers
+    choice Accept : ContractId Game
+      with
+        player2Bet : Money
+      controller player2
+      do
+        assertMsg "Both bets must be the same" $ player1Bet == player2Bet
+        create Game with
+          player1
+          player2
+          player1Bet
+          player2Bet
+          player1Move = None
+          player2Move = None
+          player1MoveType = None
+          player2MoveType = None
+          observers
+
+-- A game of Rock Paper Scissors
+template Game
+  with
+    player1 : Party -- The player who initiated the game
+    player2 : Party -- The player who accepted the game
+    observers : [Party] -- Others who are watching the game
+    player1Bet : Money -- The money contributed by Player 1
+    player2Bet : Money -- The money contributed by Player 2
+    player1Move : Optional (ContractId Move) -- Player 1's committed secret move, if they have made it
+    player2Move : Optional (ContractId Move) -- Player 2's committed secret move, if they have made it
+    player1MoveType : Optional MoveType -- Player 1's publicly revealed move, if they have revealed it
+    player2MoveType : Optional MoveType -- Player 2's publicly revealed move, if they have revealed it
+  where
+    ensure and
+      [ player1Bet >= 0.00
+      , player1Bet == player2Bet
+      , if isNone player1Move || isNone player2Move
+        then isNone player1MoveType && isNone player2MoveType
+        else True
+      ]
+    signatory player1, player2
+    observer observers
+    -- Commit to a move, without revealing it
+    choice Player1Commit : ContractId Game
+      with
+        newPlayer1Move : ContractId Move
+      controller player1
+      do
+        assertMsg "Player 1 has already committed to a move; it cannot be changed" $ isNone player1Move
+        create this with
+          player1Move = Some newPlayer1Move
+    choice Player2Commit : ContractId Game
+      with
+        newPlayer2Move : ContractId Move
+      controller player2
+      do
+        assertMsg "Player 2 has already committed to a move; it cannot be changed" $ isNone player2Move
+        create this with
+          player2Move = Some newPlayer2Move
+    -- Reveal a move that was previously committed
+    choice Player1Reveal : Optional (ContractId Game)
+      controller player1
+      do
+        assertMsg "Player 1 has already revealed their move" $ isNone player1MoveType
+        (player1MoveCid, _) <- checkAndGetCommittedMoves this
+        move <- fetch player1MoveCid
+        assertMsg "This move was made by the wrong player" $ move.player == player1
+        archive player1MoveCid
+        payOutOrContinue this with
+          player1MoveType = Some move.moveType
+    choice Player2Reveal : Optional (ContractId Game)
+      controller player2
+      do
+        assertMsg "Player 2 has already revealed their move" $ isNone player2MoveType
+        (_, player2MoveCid) <- checkAndGetCommittedMoves this
+        move <- fetch player2MoveCid
+        assertMsg "This move was made by the wrong player" $ move.player == player2
+        archive player2MoveCid
+        payOutOrContinue this with
+          player2MoveType = Some move.moveType
+
+-- Retrieve the committed moves, only if both are committed
+checkAndGetCommittedMoves : Game -> Update (ContractId Move, ContractId Move)
+checkAndGetCommittedMoves (Game {..}) = do
+  case (player1Move, player2Move) of
+    (None, None) -> fail "Neither player has committed to a move yet"
+    (None, Some _) -> fail "Player 1 has not yet committed to a move"
+    (Some _, None) -> fail "Player 2 has not yet committed to a move"
+    (Some p1, Some p2) -> pure (p1, p2)
+
+data GameResult = Player1Wins | Player2Wins | Draw
+
+-- If the game is over, return the result (win or draw)
+getResultIfFinished : Game -> Optional GameResult
+getResultIfFinished (Game {..}) =
+  case (player1MoveType, player2MoveType) of
+    (Some p1, Some p2) -> Some $ case p1 of -- Game is finished
+      Rock -> case p2 of
+        Rock -> Draw
+        Paper -> Player2Wins -- Paper covers rock
+        Scissors -> Player1Wins -- Rock smashes scissors
+      Paper -> case p2 of
+        Rock -> Player1Wins -- Paper covers rock
+        Paper -> Draw
+        Scissors -> Player2Wins -- Scissors cut paper
+      Scissors -> case p2 of
+        Rock -> Player2Wins -- Rock smashes scissors
+        Paper -> Player1Wins -- Scissors cut paper
+        Scissors -> Draw
+    _ -> None -- Game is not finished
+
+-- If the game is over, pay out the winnings; otherwise, save the current state to the ledger
+payOutOrContinue : Game -> Update (Optional (ContractId Game))
+payOutOrContinue this@(Game {..}) = case getResultIfFinished this of
+  None -> Some <$> create this
+  Some result -> do
+    case result of
+      Player1Wins -> do
+        payTo player1 player1Bet
+        payTo player1 player2Bet
+      Player2Wins -> do
+        payTo player2 player1Bet
+        payTo player2 player2Bet
+      Draw -> do
+        payTo player1 player1Bet
+        payTo player2 player2Bet
+    pure None
+
+data MoveType = Rock | Paper | Scissors
+  deriving (Show, Eq)
+
+-- A move that a player has committed to, but not necessarily revealed
+template Move
+  with
+    player : Party
+    moveType : MoveType
+  where
+    signatory player
+
+-- A utility template for revealing a player's moves on multiple contracts
+-- A player could, e.g., run this in a loop repeatedly trying to reveal in all games in which they're participating
+-- This is not really very useful in its current state, but demonstrates how try/catch could be used for something like this
+template Revealer with
+    player : Party
+  where
+    signatory player
+    choice RevealAll : ()
+      with
+        games : [ContractId Game]
+      controller player
+      do
+        forA_ games $ \game -> do
+          Game {..} <- fetch game
+          try do
+            if player == player1
+            then void $ exercise game Player1Reveal
+            else if player == player2
+              then void $ exercise game Player2Reveal
+              else pure ()
+          catch
+            GeneralError _ -> pure ()
